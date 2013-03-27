@@ -132,7 +132,7 @@ int main(INT32 argc, CHAR **argv)
 
 		  }
 
-		  else if( INS_IsProcedureCall(ins) || INS_IsCall(ins) || INS_IsRet(ins) )
+		  else if( INS_IsProcedureCall(ins) || INS_IsCall(ins) )
 		    std::cout << "   Call";
 
 		  else if( INS_IsRet(ins) )
