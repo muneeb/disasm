@@ -32,6 +32,7 @@ END_LEGAL */
 #include <iostream>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "pin.H"
 
 KNOB<string> KnobInputFile(KNOB_MODE_WRITEONCE, "pintool",
@@ -55,6 +56,18 @@ INT32 Usage()
 /* ===================================================================== */
 /* Main                                                                  */
 /* ===================================================================== */
+
+int is_lea(std::string instr_string)
+{
+  std::string::size_type pos = instr_string.find_first_of(' ');
+  std::string token = instr_string.substr(0, pos);
+
+  if( token.compare("lea") == 0)
+    return 1;
+	    
+  return 0;
+}
+
 
 int main(INT32 argc, CHAR **argv)
 {
@@ -105,6 +118,7 @@ int main(INT32 argc, CHAR **argv)
 		  std::cout << "instr:    " << setw(8) << INS_Address(ins) << " " << INS_Disassemble(ins) << endl;
 		    
 		  int num_rregs = INS_MaxNumRRegs(ins); 
+		  int isLea = is_lea(INS_Disassemble(ins));
 
 		  for(int i = 0; i< num_rregs; i++)
 		    std::cout << "R:" << INS_RegR(ins, i) << "   ";
@@ -141,29 +155,33 @@ int main(INT32 argc, CHAR **argv)
 		  else if( INS_IsStackRead(ins) || INS_IsStackWrite(ins) )
 		    std::cout << "   Stack";
 
-		  else if( INS_IsMemoryRead(ins) || INS_IsMemoryWrite(ins) ){
+		  else if( INS_IsMemoryRead(ins) || INS_IsMemoryWrite(ins) || isLea){
 
-		    int numOps = INS_OperandCount(ins);
-		    //		    int numMemOps = INS_MemoryOperandCount(ins);
+		    //int numOps = INS_OperandCount(ins);
 		    
-		    for(int i = 0; i< numOps; i++){
-		      if(!INS_OperandIsMemory(ins, i))
-			continue;
+		    //		    for(int i = 0; i< numOps; i++){
+		    //  if(!INS_OperandIsMemory(ins, i))
+		    //continue;
 
-		      if( INS_IsMemoryRead(ins) ){
+		      if(isLea)
+			std::cout << "MemBaseReg:" << INS_MemoryBaseReg(ins) <<"   "<< "MemDis:" << INS_MemoryDisplacement(ins) << "   " << "MemIdxReg:" << INS_MemoryIndexReg(ins) 
+				  << "   " << "MemScale:" << INS_MemoryScale(ins) << "   Lea";
+		      else if( INS_IsMemoryRead(ins) )
 			std::cout << "MemBaseReg:" << INS_MemoryBaseReg(ins) <<"   "<< "MemDis:" << INS_MemoryDisplacement(ins) << "   " << "MemIdxReg:" << INS_MemoryIndexReg(ins) 
 				  << "   " << "MemScale:" << INS_MemoryScale(ins) << "   Read";
-			//			std::cout << "MemRdReg:" << INS_OperandReg(ins, i) << "   "<< "NumMemOps:" << numMemOps << "   Read";
-		      }
+		      
 		      else
 		    	std::cout << "MemBaseReg:" << INS_MemoryBaseReg(ins) <<"   "<< "MemDis:" << INS_MemoryDisplacement(ins) << "   " << "MemIdxReg:" << INS_MemoryIndexReg(ins) 
 				  << "   " << "MemScale:" << INS_MemoryScale(ins) << "   Write";
-			//			std::cout << "MemWrReg:" << INS_OperandReg(ins, i) << "   "<< "NumMemOps:" << numMemOps << "   Write";
-		    }
+
+		      //		    }
 		  }
 
 		  else if( INS_IsMov(ins) )
 		    std::cout << "   Move";
+
+		  else if( INS_IsNop(ins) )
+		    std::cout << "   Nop";
 		  
 		  std::cout << endl;
 	      }
